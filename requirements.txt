@@ -1,0 +1,6 @@
+pandas
+nltk
+networkx
+git+https://github.com/dpkp/kafka-python.git
+pymongo
+scikit-learn
