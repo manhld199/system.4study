@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 
 # Import custom modules
 from process.produce_kafka import produce_data
-from process.consume_kafka import stream_data, consume_data
+from process.consume_kafka import stream_data
 
 default_args = {
 	'owner':'Group1',
@@ -19,7 +19,7 @@ default_args = {
 }
 
 with DAG(
-	dag_id='online_dag4',
+	dag_id='online_dag',
 	default_args=default_args,
 	schedule_interval='@daily'
 ) as dag:
@@ -42,16 +42,7 @@ with DAG(
     }
   )
 
-  data_consuming=PythonOperator(
-      task_id='data_consuming',
-      python_callable=consume_data,
-      op_kwargs={
-        'topic_name': "recommended_users",
-      }
-    )
-
   [
     data_producing,
-    data_streaming,
-    data_consuming
+    data_streaming
   ]

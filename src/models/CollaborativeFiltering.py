@@ -55,10 +55,29 @@ def compute_similarity_matrices(user_item_matrix):
   
   return user_similarity_df, item_similarity_df
 
-def recommend_courses_cf(user_id, user_course_matrix, item_similarity_df, top_n=5):
+def recommend_courses_cf(user_id, user_course_matrix, item_similarity_df, trending_courses, top_n):
+    """
+    Đề xuất khóa học cho một user cụ thể.
+    
+    Parameters:
+    user_id: ID của user cần đề xuất
+    user_course_matrix (DataFrame): Ma trận tương tác user-course
+    item_similarity_df (DataFrame): Ma trận độ tương đồng giữa các khóa học
+    top_n (int): Số lượng khóa học cần đề xuất
+    
+    Returns:
+    list: Danh sách các khóa học được đề xuất
+    """
+    # Kiểm tra nếu user_id không tồn tại
+    if user_id not in user_course_matrix.index:
+        # print(f"User {user_id} không tồn tại trong dữ liệu, đề xuất các khóa học thịnh hành.")
+        return trending_courses[:top_n]
+    
+    # Lấy các khóa học đã học
     user_courses = user_course_matrix.loc[user_id]
     watched_courses = user_courses[user_courses > 0].index.tolist()
-
+    
+    # Tính điểm khuyến nghị
     course_scores = {}
     for course in watched_courses:
         similar_courses = item_similarity_df[course].sort_values(ascending=False).index
@@ -66,12 +85,14 @@ def recommend_courses_cf(user_id, user_course_matrix, item_similarity_df, top_n=
             if sim_course not in watched_courses:
                 similarity_score = item_similarity_df.loc[course, sim_course]
                 course_scores[sim_course] = course_scores.get(sim_course, 0) + similarity_score
-
+    
+    # Lấy top N khóa học
     recommended_courses = sorted(
-        course_scores.items(),
-        key=lambda x: x[1],
+        course_scores.items(), 
+        key=lambda x: x[1], 
         reverse=True
     )[:top_n]
+    
     return [course[0] for course in recommended_courses]
 
 class RecommendationMetrics:

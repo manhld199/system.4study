@@ -5,6 +5,7 @@ import os
 import networkx as nx
 from pymongo import MongoClient
 from kafka import KafkaConsumer, KafkaProducer
+from bson.objectid import ObjectId
 
 from models.CollaborativeFiltering import recommend_courses_cf
 from models.ContentBasedFiltering import recommend_courses_cbf
@@ -90,6 +91,7 @@ def stream_data(in_topic_name, out_topic_name, model_path, graph_path):
     )
     print(f"Connected to Kafka {producer.bootstrap_connected()}")
 
+
     # Listen for Kafka messages
     for message in consumer:
         user_data = message.value
@@ -98,11 +100,13 @@ def stream_data(in_topic_name, out_topic_name, model_path, graph_path):
 
         # Map user and course IDs
         mapped_user_id = map_user_id(user_id)
+        # print("user_id", user_id, mapped_user_id)
         mapped_courses = [map_course_id(course.get("course_id")) for course in list_courses]
 
         # Generate recommendations
         if model_name == "cf":
-            recommendations = recommend_courses_cf(mapped_user_id, user_course_matrix, item_similarity_df, top_n=5)
+            trending_courses = user_course_matrix.sum(axis=0).sort_values(ascending=False).index.tolist()
+            recommendations = recommend_courses_cf(mapped_user_id, user_course_matrix, item_similarity_df, trending_courses, top_n=5)
         elif model_name == "cbf":
             recommendations = recommend_courses_cbf(G, mapped_courses, similarity_matrix, mapped_user_id, top_n=5)
         elif model_name == "fm":
@@ -134,8 +138,6 @@ def consume_data(topic_name):
     db = client["4study"]
     user_collection = db["users"]
 
-    time.sleep(30)
-
     # Khởi tạo Kafka consumer
     consumer = KafkaConsumer(
         topic_name,
@@ -152,14 +154,14 @@ def consume_data(topic_name):
         list_courses = recommended_user.get("list_courses", [])
 
         # Tìm người dùng trong MongoDB theo user_id
-        user = user_collection.find_one({"user_id": user_id})
+        user = user_collection.find_one({"_id": ObjectId(user_id)})
 
         if user:
             # Nếu người dùng tồn tại, cập nhật danh sách khóa học được đề xuất
             user_collection.update_one(
-                {"user_id": user_id},
-                {"$set": {"list_courses": list_courses}},
-                upsert=True  # Nếu không tìm thấy user, sẽ tạo mới
+                {"_id": ObjectId(user_id)},
+                {"$set": {"suggested_courses": list_courses}},
+                # upsert=True  # Nếu không tìm thấy user, sẽ tạo mới
             )
             print(f"User {user_id} đã được cập nhật với khóa học đề xuất.")
         else:
