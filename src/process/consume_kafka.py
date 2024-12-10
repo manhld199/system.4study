@@ -1,3 +1,4 @@
+import time
 import json
 import pickle
 import os
@@ -132,6 +133,8 @@ def consume_data(topic_name):
     client = MongoClient(connection_string)
     db = client["4study"]
     user_collection = db["users"]
+
+    time.sleep(30)
 
     # Khởi tạo Kafka consumer
     consumer = KafkaConsumer(

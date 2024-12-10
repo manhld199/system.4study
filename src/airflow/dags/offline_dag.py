@@ -22,7 +22,7 @@ default_args = {
 }
 
 with DAG(
-	dag_id='offline_dag_ldm2',
+	dag_id='offline_dag',
 	default_args=default_args,
 	schedule_interval='@daily'
 ) as dag:

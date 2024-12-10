@@ -1,12 +1,17 @@
 FROM apache/airflow:2.10.3
 
-# Switch to root user to install Git
+# Switch to root user to install Git and set permissions
 USER root
 
 # Install Git
 RUN apt-get update && apt-get install -y git
 
-# Switch back to airflow user for the rest of the build
+# Ensure the 'models' directory is accessible by the 'airflow' user
+RUN mkdir -p /opt/***/data/models && \
+    chown -R airflow:0 /opt/***/data/models && \
+    chmod -R u+rwX,g+rwX /opt/***/data/models
+
+# Switch back to airflow user
 USER airflow
 
 # Copy and install Python dependencies

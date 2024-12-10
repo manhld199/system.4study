@@ -23,6 +23,23 @@ def delete_old_best_models(model_path):
             os.remove(file_path)
             print(f"Đã xóa file: {file_path}")
 
+
+def safe_copy(src, dst):
+    """Sao chép file với kiểm tra quyền."""
+    try:
+        if not os.access(os.path.dirname(dst), os.W_OK):
+            raise PermissionError(f"Không có quyền ghi vào thư mục: {os.path.dirname(dst)}")
+        
+        if os.path.exists(dst):
+            os.remove(dst)  # Xóa file đích nếu tồn tại
+        
+        shutil.copy(src, dst)
+        print(f"Copied {src} to {dst}")
+    except PermissionError as e:
+        print(f"Lỗi quyền truy cập: {e}")
+    except Exception as e:
+        print(f"Lỗi không xác định: {e}")
+
 def compare_model(test_path, model_path, graph_path):
     test_user = pd.read_csv(test_path)
     methods = {}
@@ -87,13 +104,13 @@ def compare_model(test_path, model_path, graph_path):
 
         # Sao chép file của mô hình tốt nhất thành best_model.pkl
         if best_method == 'Collaborative Filtering':
-            shutil.copy(cf_path, f"{model_path}/best_model_cf.pkl")
+            safe_copy(cf_path, f"{model_path}/best_model_cf.pkl")
         elif best_method == 'Content Based Filtering':
-            shutil.copy(graph_path, f"{model_path}/best_model_cbf.pkl")
+            safe_copy(graph_path, f"{model_path}/best_model_cbf.pkl")
         elif best_method == 'Factorization Matrix':
-            shutil.copy(fm_path, f"{model_path}/best_model_fm.pkl")
+            safe_copy(fm_path, f"{model_path}/best_model_fm.pkl")
 
-        print(f"Model tốt nhất đã được lưu thành best_model.pkl.")
+        print(f"Model tốt nhất đã được lưu thành best_model_.pkl.")
     else:
         print("Không có model nào khả dụng để so sánh.")
 
