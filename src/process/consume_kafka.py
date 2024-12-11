@@ -157,10 +157,11 @@ def consume_data(topic_name):
         user = user_collection.find_one({"_id": ObjectId(user_id)})
 
         if user:
+            suggested_courses = [ObjectId(course_id) for course_id in list_courses]
             # Nếu người dùng tồn tại, cập nhật danh sách khóa học được đề xuất
             user_collection.update_one(
                 {"_id": ObjectId(user_id)},
-                {"$set": {"suggested_courses": list_courses}},
+                {"$set": {"suggested_courses": suggested_courses}},
                 # upsert=True  # Nếu không tìm thấy user, sẽ tạo mới
             )
             print(f"User {user_id} đã được cập nhật với khóa học đề xuất.")
