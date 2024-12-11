@@ -153,8 +153,9 @@ def evaluate_recommendations_cf(test_user, user_item_matrix, item_similarity_df,
   # Generate recommendations
   recommendations = {}
   for user_id in tqdm(test_user['user_id'], desc="Generating recommendations"):
+      trending_courses = user_item_matrix.sum(axis=0).sort_values(ascending=False).index.tolist()
       recommendations[user_id] = recommend_courses_cf(
-          user_id, user_item_matrix, item_similarity_df, k
+          user_id, user_item_matrix, item_similarity_df, trending_courses, k
       )
   test_user['recommended_courses'] = test_user['user_id'].map(recommendations)
   
